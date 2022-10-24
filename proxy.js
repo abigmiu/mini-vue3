@@ -13,6 +13,7 @@ function cleanup(effectFn) {
 
 let activeEffect;
 const effectStack = [];
+
 function effect(fn, options = {}) {
     const effectFn = () => {
         cleanup(effectFn);
@@ -62,11 +63,11 @@ function trigger(target, key) {
     const effectsToRun = new Set();
 
     effects &&
-        effects.forEach((effectFn) => {
-            if (effectFn !== activeEffect) {
-                effectsToRun.add(effectFn);
-            }
-        });
+    effects.forEach((effectFn) => {
+        if (effectFn !== activeEffect) {
+            effectsToRun.add(effectFn);
+        }
+    });
 
     effectsToRun.forEach((effectFn) => {
         if (effectFn.options.scheduler) {
@@ -110,11 +111,25 @@ function watch(source, cb) {
     } else {
         getter = () => traverse(source);
     }
-    effect(() => traverse(source), {
-        scheduler() {
-            cb();
-        },
+
+    let oldValue, newValue;
+
+    const job = () => {
+        newValue = effectFn();
+        cb(newValue, oldValue);
+        oldValue = newValue;
+    };
+
+    const effectFn = effect(() => getter(), {
+        lazy: true,
+        scheduler: job,
     });
+
+    if (options.immediate) {
+        job();
+    } else {
+        oldValue = effectFn();
+    }
 }
 
 function traverse(value, seen = new Set()) {

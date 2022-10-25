@@ -1,4 +1,5 @@
 let activeEffect = null;
+const effectStack = [];
 const bucket = new WeakMap(); // 及时回收没有被引用的key
 
 /**
@@ -23,7 +24,12 @@ export function effect(fn) {
     const effectFn = () => {
         cleanUpEffects(effectFn);
         activeEffect = effectFn;
+        effectStack.push(effectFn)
         fn();
+        // 将当前副作用函数弹出
+        effectStack.pop()
+        // 恢复到之前的值
+        activeEffect = effectStack[effectStack.length - 1]
     };
     // 这里 给 effectFn 赋值 deps
     effectFn.deps = [];

@@ -11,5 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "vitest": "^0.24.3"
-  }
+  },
+  "type": "module"
 }

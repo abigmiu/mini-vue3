@@ -37,6 +37,7 @@ export function effect(fn) {
 }
 
 export function track(target, key) {
+    console.log('track', target, key)
     let keyDepsMap = bucket.get(target);
 
     if (!keyDepsMap) {
@@ -51,6 +52,15 @@ export function track(target, key) {
     activeEffect.deps.push(deps);
 }
 
+
+function triggerEffects(deps) {
+    deps.forEach(effect => {
+        if (activeEffect !== effect) {
+            effect()
+        }
+    })
+}
+
 export function trigger(target, key) {
     let keyDepsMap = bucket.get(target);
     if (!keyDepsMap) return;
@@ -59,5 +69,5 @@ export function trigger(target, key) {
 
     // new Set 防止死循环
     const depsToRun = new Set(deps);
-    depsToRun.forEach((effect) => effect());
+    triggerEffects(depsToRun)
 }

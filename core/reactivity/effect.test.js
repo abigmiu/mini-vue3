@@ -68,4 +68,12 @@ describe('effect', () => {
         expect(fn1).toHaveBeenCalledTimes(2);
         expect(fn2).toHaveBeenCalledTimes(3);
     });
+
+    it('避免无限递归循环', function() {
+        const obj = reactive({foo: 1})
+        effect(() => {
+            // 同时 get + set -> 在运行当前 effect 未结束时，又调用了当前 effect
+            obj.foo++
+        })
+    });
 });

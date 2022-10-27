@@ -77,3 +77,24 @@ describe('effect', () => {
         })
     });
 });
+
+describe('scheduler', () => {
+    it('使用 scheduler 控制调度时机', function() {
+        vitest.useFakeTimers()
+        const obj = reactive({foo: 1})
+        let bar
+
+        effect(() => {
+            bar = obj.foo
+        }, {
+            scheduler(fn) {
+                setTimeout(fn)
+            }
+        })
+        obj.foo = 0
+
+        bar = 3
+        vitest.runAllTimers()
+        expect(bar).toBe(0)
+    });
+});

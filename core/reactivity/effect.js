@@ -20,7 +20,9 @@ function cleanUpEffects(effectFn) {
     effectFn.deps.length = 0;
 }
 
-export function effect(fn) {
+export function effect(fn, options = {
+    scheduler: null
+}) {
     const effectFn = () => {
         cleanUpEffects(effectFn);
         activeEffect = effectFn;
@@ -33,11 +35,11 @@ export function effect(fn) {
     };
     // 这里 给 effectFn 赋值 deps
     effectFn.deps = [];
+    effectFn.options = options;
     effectFn();
 }
 
 export function track(target, key) {
-    console.log('track', target, key)
     let keyDepsMap = bucket.get(target);
 
     if (!keyDepsMap) {
@@ -48,6 +50,7 @@ export function track(target, key) {
     if (!deps) {
         keyDepsMap.set(key, (deps = new Set()));
     }
+    if (!activeEffect) return
     deps.add(activeEffect);
     activeEffect.deps.push(deps);
 }
@@ -55,7 +58,9 @@ export function track(target, key) {
 
 function triggerEffects(deps) {
     deps.forEach(effect => {
-        if (activeEffect !== effect) {
+        if (effect.options.scheduler) {
+            effect.options.scheduler(effect)
+        } else {
             effect()
         }
     })
@@ -68,6 +73,11 @@ export function trigger(target, key) {
     if (!deps) return;
 
     // new Set 防止死循环
-    const depsToRun = new Set(deps);
+    const depsToRun = new Set();
+    deps.forEach(effect => {
+        if (activeEffect !== effect) {
+            depsToRun.add(effect)
+        }
+    })
     triggerEffects(depsToRun)
 }

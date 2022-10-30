@@ -20,22 +20,32 @@ function cleanUpEffects(effectFn) {
     effectFn.deps.length = 0;
 }
 
-export function effect(fn, options = {
-    scheduler: null
-}) {
+export function effect(
+    fn,
+    options = {
+        scheduler: null,
+        lazy: false,
+    }
+) {
     const effectFn = () => {
         cleanUpEffects(effectFn);
         activeEffect = effectFn;
-        effectStack.push(effectFn)
-        fn();
+        effectStack.push(effectFn);
+        const res = fn();
+        console.log('res', res);
         // 将当前副作用函数弹出
-        effectStack.pop()
+        effectStack.pop();
         // 恢复到之前的值
-        activeEffect = effectStack[effectStack.length - 1]
+        activeEffect = effectStack[effectStack.length - 1];
+
+        return res;
     };
     // 这里 给 effectFn 赋值 deps
     effectFn.deps = [];
     effectFn.options = options;
+    if (options.lazy) {
+        return effectFn;
+    }
     effectFn();
 }
 
@@ -50,20 +60,19 @@ export function track(target, key) {
     if (!deps) {
         keyDepsMap.set(key, (deps = new Set()));
     }
-    if (!activeEffect) return
+    if (!activeEffect) return;
     deps.add(activeEffect);
     activeEffect.deps.push(deps);
 }
 
-
 function triggerEffects(deps) {
-    deps.forEach(effect => {
+    deps.forEach((effect) => {
         if (effect.options.scheduler) {
-            effect.options.scheduler(effect)
+            effect.options.scheduler(effect);
         } else {
-            effect()
+            effect();
         }
-    })
+    });
 }
 
 export function trigger(target, key) {
@@ -74,10 +83,10 @@ export function trigger(target, key) {
 
     // new Set 防止死循环
     const depsToRun = new Set();
-    deps.forEach(effect => {
+    deps.forEach((effect) => {
         if (activeEffect !== effect) {
-            depsToRun.add(effect)
+            depsToRun.add(effect);
         }
-    })
-    triggerEffects(depsToRun)
+    });
+    triggerEffects(depsToRun);
 }

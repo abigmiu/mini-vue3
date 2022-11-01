@@ -1,4 +1,4 @@
-import { effect } from './effect';
+import { effect, track, trigger } from './effect.js';
 
 export function computed(getter) {
     let dirty = true;
@@ -8,16 +8,20 @@ export function computed(getter) {
         lazy: true,
         scheduler() {
             dirty = true;
+            trigger(obj, 'value');
         },
     });
 
-    return {
+    const obj = {
         get value() {
             if (dirty) {
                 cache = runner();
+                track(obj, 'value');
                 dirty = false;
             }
             return cache;
         },
     };
+
+    return obj;
 }

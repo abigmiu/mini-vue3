@@ -1,6 +1,6 @@
 import { describe, expect, it, vitest } from 'vitest';
-import { reactive } from './reactive.js';
-import { effect } from './effect.js';
+import { reactive } from '../reactive.js';
+import { effect } from '../effect.js';
 
 describe('effect', () => {
     it('should observe basic properties', () => {

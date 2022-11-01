@@ -1,9 +1,9 @@
 import { it, expect } from 'vitest';
 import { describe } from 'vitest';
-import { reactive } from './reactive';
-import { computed } from './computed';
+import { reactive } from '../reactive';
+import { computed } from '../computed';
 import { vitest } from 'vitest';
-import { effect } from './effect';
+import { effect } from '../effect';
 
 describe('computed', function () {
     it('可以通过 value 访问', function () {

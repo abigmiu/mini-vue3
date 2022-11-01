@@ -18,7 +18,14 @@ function traverse(value, seen = new Set()) {
 }
 
 export function watch(source, callback) {
-    effect(() => traverse(source), {
+    let getter;
+    if (typeof source === 'function') {
+        getter = source;
+    } else {
+        getter = () => traverse(source);
+    }
+
+    effect(getter, {
         scheduler() {
             callback();
         },

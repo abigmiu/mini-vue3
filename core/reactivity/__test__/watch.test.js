@@ -33,4 +33,20 @@ describe('watch', function () {
         obj.bar++;
         expect(cb).toHaveBeenCalledTimes(2);
     });
+
+    it('可以监听 getter函数', function () {
+        console.log('监听 getter 函数');
+        const obj = reactive({
+            foo: 1,
+            bar: 1,
+        });
+        const cb = vitest.fn(() => null);
+
+        const getter = vitest.fn(() => obj.foo);
+        watch(getter, cb);
+        obj.foo++;
+        expect(cb).toHaveBeenCalledTimes(1);
+        obj.bar++;
+        expect(cb).toHaveBeenCalledTimes(1);
+    });
 });

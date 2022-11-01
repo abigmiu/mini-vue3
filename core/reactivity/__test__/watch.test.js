@@ -18,4 +18,19 @@ describe('watch', function () {
         obj.foo++;
         expect(cb).toHaveBeenCalledTimes(1);
     });
+
+    it('对象任意属性都可以触发回调', () => {
+        const obj = reactive({
+            foo: 1,
+            bar: 1,
+        });
+        const cb = vitest.fn(() => null);
+        watch(obj, cb);
+
+        expect(cb).toHaveBeenCalledTimes(0);
+        obj.foo++;
+        expect(cb).toHaveBeenCalledTimes(1);
+        obj.bar++;
+        expect(cb).toHaveBeenCalledTimes(2);
+    });
 });

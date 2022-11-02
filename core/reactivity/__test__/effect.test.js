@@ -196,4 +196,16 @@ describe('scheduler', () => {
         delete obj.foo
         expect(fn).toHaveBeenCalledTimes(2)
     })
+    it('set 值不变时， 不触发副作用函数', () => {
+        const obj = reactive({
+            foo: 1,
+        })
+        const fn = vitest.fn(() => obj.foo)
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        obj.foo = 1;
+        expect(fn).toHaveBeenCalledTimes(1)
+        obj.foo++
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
 });

@@ -1,4 +1,5 @@
 import { track, trigger, triggerType } from './effect.js';
+import {equal} from '../util'
 
 export let ITERATE_KEY = Symbol()
 
@@ -15,12 +16,16 @@ function createReactive(obj) {
             track(target, key);
             return res;
         },
-        set(target, key, value, receiver) {
+        set(target, key, newVal, receiver) {
+            const oldVal = target[key]
             const type = target.hasOwnProperty(key)
                 ? triggerType.SET
                 : triggerType.ADD
-            const res = Reflect.set(target, key, value, receiver);
-            trigger(target, key, type);
+            const res = Reflect.set(target, key, newVal, receiver);
+            if (!equal(oldVal, newVal)) {
+                trigger(target, key, type);
+            }
+
             return res;
         },
         // 拦截 for ... in

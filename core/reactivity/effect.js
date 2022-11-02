@@ -1,3 +1,5 @@
+import { ITERATE_KEY } from './reactive.js'
+
 let activeEffect = null;
 const effectStack = [];
 const bucket = new WeakMap(); // 及时回收没有被引用的key
@@ -79,14 +81,21 @@ export function trigger(target, key) {
     let keyDepsMap = bucket.get(target);
     if (!keyDepsMap) return;
     let deps = keyDepsMap.get(key);
-    if (!deps) return;
 
     // new Set 防止死循环
     const depsToRun = new Set();
-    deps.forEach((effect) => {
+    deps && deps.forEach((effect) => {
         if (activeEffect !== effect) {
             depsToRun.add(effect);
         }
     });
+    const iterateDeps = keyDepsMap.get(ITERATE_KEY)
+    console.log('iterateDeps', iterateDeps)
+    iterateDeps && iterateDeps.forEach((effectFn) => {
+        if (activeEffect !== effectFn) {
+            depsToRun.add(effectFn)
+        }
+    })
+
     triggerEffects(depsToRun);
 }

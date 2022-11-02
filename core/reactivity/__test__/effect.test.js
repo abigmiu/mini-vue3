@@ -154,4 +154,19 @@ describe('scheduler', () => {
         obj.foo++;
         expect(fn).toHaveBeenCalledTimes(2)
     })
+
+    it('监听 for ... in', () => {
+        const obj = reactive({
+            foo: 'foo in',
+        })
+
+        const fn = vitest.fn(() => {
+            for (const k in obj) {}
+        })
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+
+        obj.bar = 1
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
 });

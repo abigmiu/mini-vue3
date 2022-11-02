@@ -96,7 +96,7 @@ export function trigger(target, key, type) {
         }
     });
 
-    if (type === triggerType.ADD) {
+    if (type === triggerType.ADD || type === triggerType.DELETE) {
         const iterateDeps = keyDepsMap.get(ITERATE_KEY)
         iterateDeps && iterateDeps.forEach((effectFn) => {
             if (activeEffect !== effectFn) {

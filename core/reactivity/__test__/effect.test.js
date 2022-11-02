@@ -169,4 +169,31 @@ describe('scheduler', () => {
         obj.bar = 1
         expect(fn).toHaveBeenCalledTimes(2)
     })
+
+    it('对象已有属性修改不触发 for ... in 副作用', () => {
+        const obj = reactive({
+            foo: 1,
+        })
+
+        const fn = vitest.fn(() => {
+            for (const k in obj) { }
+        })
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        obj.foo++
+        expect(fn).toHaveBeenCalledTimes(1)
+    })
+
+    it('删除对象属性触发 for ... in 副作用', () => {
+        const obj = reactive({
+            foo: 1,
+        })
+        const fn = vitest.fn(() => {
+            for (const k in obj) { }
+        })
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        delete obj.foo
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
 });

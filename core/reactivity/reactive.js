@@ -1,4 +1,4 @@
-import { track, trigger } from './effect.js';
+import { track, trigger, triggerType } from './effect.js';
 
 export let ITERATE_KEY = Symbol()
 
@@ -16,8 +16,11 @@ function createReactive(obj) {
             return res;
         },
         set(target, key, value, receiver) {
+            const type = target.hasOwnProperty(key)
+                ? triggerType.SET
+                : triggerType.ADD
             const res = Reflect.set(target, key, value, receiver);
-            trigger(target, key);
+            trigger(target, key, type);
             return res;
         },
         // 拦截 for ... in

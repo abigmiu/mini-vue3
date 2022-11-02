@@ -4,6 +4,12 @@ let activeEffect = null;
 const effectStack = [];
 const bucket = new WeakMap(); // 及时回收没有被引用的key
 
+export const triggerType = {
+    ADD: 'ADD',
+    SET: 'SET',
+    DELETE: 'DELETE',
+}
+
 /**
  * target
  *  -- key
@@ -77,7 +83,7 @@ function triggerEffects(deps) {
     });
 }
 
-export function trigger(target, key) {
+export function trigger(target, key, type) {
     let keyDepsMap = bucket.get(target);
     if (!keyDepsMap) return;
     let deps = keyDepsMap.get(key);
@@ -89,13 +95,16 @@ export function trigger(target, key) {
             depsToRun.add(effect);
         }
     });
-    const iterateDeps = keyDepsMap.get(ITERATE_KEY)
-    console.log('iterateDeps', iterateDeps)
-    iterateDeps && iterateDeps.forEach((effectFn) => {
-        if (activeEffect !== effectFn) {
-            depsToRun.add(effectFn)
-        }
-    })
+
+    if (type === triggerType.ADD) {
+        const iterateDeps = keyDepsMap.get(ITERATE_KEY)
+        iterateDeps && iterateDeps.forEach((effectFn) => {
+            if (activeEffect !== effectFn) {
+                depsToRun.add(effectFn)
+            }
+        })
+    }
+
 
     triggerEffects(depsToRun);
 }

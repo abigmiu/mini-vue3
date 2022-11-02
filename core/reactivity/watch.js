@@ -1,4 +1,4 @@
-import { effect } from './effect';
+import { effect } from './effect.js';
 
 /**
  * 递归读取， 收集依赖
@@ -19,15 +19,20 @@ function traverse(value, seen = new Set()) {
 
 export function watch(source, callback) {
     let getter;
+    let newVal, oldVal
     if (typeof source === 'function') {
         getter = source;
     } else {
         getter = () => traverse(source);
     }
 
-    effect(getter, {
+    const effectFn = effect(getter, {
+        lazy: true, // 用 lazy 是为了返回函数给 effectFn
         scheduler() {
-            callback();
+            newVal = effectFn()
+            callback(newVal, oldVal);
+            oldVal = newVal
         },
     });
+    oldVal = effectFn(); // 手动调用获取第一次的值（绑定依赖）
 }

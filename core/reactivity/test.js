@@ -1,16 +1,8 @@
-import { reactive } from './reactive.js';
-import { effect } from './effect.js';
-import { computed } from './computed.js';
-
+import { reactive } from './reactive.js'
+import { watch } from './watch.js'
 const obj = reactive({
     foo: 1,
 });
-const bar = computed(() => {
-    console.log('computed');
-    obj.foo;
-});
-effect(() => {
-    console.log('effect');
-    bar.value;
-});
+const cb = () => obj.foo;
+watch(obj, cb);
 obj.foo++;

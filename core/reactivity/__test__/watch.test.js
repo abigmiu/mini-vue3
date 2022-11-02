@@ -72,4 +72,17 @@ describe('watch', function () {
         expect(_oldVal).toBe(2)
         expect(_newVal).toBe(3)
     })
+
+    it('immediate 立即执行', () => {
+        const obj = reactive({
+            foo: 1,
+            bar: 1,
+        });
+        const cb = vitest.fn(() => null)
+        watch(obj, cb, {
+            immediate: true,
+        })
+        expect(cb).toHaveBeenCalledTimes(1)
+
+    })
 });

@@ -17,7 +17,9 @@ function traverse(value, seen = new Set()) {
     return value;
 }
 
-export function watch(source, callback) {
+export function watch(source, callback, options = {
+    immediate: false,
+}) {
     let getter;
     let newVal, oldVal
     if (typeof source === 'function') {
@@ -26,13 +28,22 @@ export function watch(source, callback) {
         getter = () => traverse(source);
     }
 
+    const job = () => {
+        newVal = effectFn()
+        callback(newVal, oldVal);
+        oldVal = newVal
+    }
+
     const effectFn = effect(getter, {
         lazy: true, // 用 lazy 是为了返回函数给 effectFn
         scheduler() {
-            newVal = effectFn()
-            callback(newVal, oldVal);
-            oldVal = newVal
+            job();
         },
     });
-    oldVal = effectFn(); // 手动调用获取第一次的值（绑定依赖）
+    if (options.immediate) {
+        job();
+    } else {
+        oldVal = effectFn(); // 手动调用获取第一次的值（绑定依赖）
+    }
+
 }

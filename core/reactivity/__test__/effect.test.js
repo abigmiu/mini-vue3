@@ -139,4 +139,19 @@ describe('scheduler', () => {
         expect(fn).toHaveBeenCalledTimes(2);
         expect(obj.foo).toBe(5);
     });
+
+    it('监听 key in obj', () => {
+        const obj = reactive({
+            foo: 1,
+        })
+
+        const fn = vitest.fn(() => {
+            'foo' in obj
+        })
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+
+        obj.foo++;
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
 });

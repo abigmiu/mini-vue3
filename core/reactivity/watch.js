@@ -28,9 +28,17 @@ export function watch(source, callback, options = {
         getter = () => traverse(source);
     }
 
+    let cleanup
+    function onInvalidate(fn) {
+        cleanup = fn
+    }
+
     const job = () => {
         newVal = effectFn()
-        callback(newVal, oldVal);
+        if (cleanup) {
+            cleanup()
+        }
+        callback(newVal, oldVal, onInvalidate);
         oldVal = newVal
     }
 

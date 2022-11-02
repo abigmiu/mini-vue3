@@ -85,4 +85,43 @@ describe('watch', function () {
         expect(cb).toHaveBeenCalledTimes(1)
 
     })
+
+    it('onInvalidate 回调处理竞态问题', () => {
+        vitest.useFakeTimers()
+        let finalData
+        let arr = [1, 2, 3]
+
+        async function sleep(ms) {
+            const result = arr.pop();
+            return new Promise(r => setTimeout(() => {
+                r(result)
+            }, ms))
+        }
+
+        const obj = reactive({
+            foo: 1,
+            bar: 1,
+        })
+
+        watch(obj, async (newVal, oldVal, onInvalidate) => {
+            let expired = false
+            onInvalidate(() => {
+                console.log('onInvalidate')
+                expired = true;
+            })
+            console.log(arr.length)
+            const res = await sleep(arr.length * 1000)
+            console.log(newVal)
+
+            if (!expired) {
+                finalData = res;
+                expect(finalData).toBe(1)
+            }
+        })
+
+        obj.foo++
+        obj.foo++
+        obj.foo++
+        vitest.runAllTimers()
+    })
 });

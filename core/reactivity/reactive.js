@@ -3,11 +3,19 @@ import {equal} from '../util'
 
 export let ITERATE_KEY = Symbol()
 
-function createReactive(obj) {
+function createReactive(obj, isShallow = false) {
     return new Proxy(obj, {
         get(target, key, receiver) {
             const res = Reflect.get(target, key, receiver);
             track(target, key);
+
+            if (isShallow) {
+                return res;
+            }
+
+            if (typeof res === 'object' && res !== null) {
+                return reactive(res)
+            }
             return res;
         },
         // 拦截 key in obj
@@ -51,4 +59,8 @@ function createReactive(obj) {
 
 export function reactive(obj) {
     return createReactive(obj);
+}
+
+export function shallowReactive(obj) {
+    return createReactive(obj, true)
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it, vitest } from 'vitest';
-import { reactive } from '../reactive.js';
+import { reactive, shallowReactive } from '../reactive.js';
 import { effect } from '../effect.js';
+import { vi } from 'vitest';
 
 describe('effect', () => {
     it('should observe basic properties', () => {
@@ -206,6 +207,33 @@ describe('scheduler', () => {
         obj.foo = 1;
         expect(fn).toHaveBeenCalledTimes(1)
         obj.foo++
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
+
+    it('浅响应 与深响应', () => {
+        const shallowObj = shallowReactive({
+            foo: {
+                bar: 1
+            }
+        })
+        const obj = reactive({
+            foo: {
+                bar: 1
+            }
+        })
+
+        const shallowFn = vitest.fn(() => shallowObj.foo.bar)
+        const fn = vitest.fn(() => obj.foo.bar)
+
+        effect(shallowFn)
+        effect(fn)
+
+        expect(shallowFn).toHaveBeenCalledTimes(1)
+        expect(fn).toBeCalledTimes(1)
+
+        shallowObj.foo.bar++;
+        obj.foo.bar++;
+        expect(shallowFn).toHaveBeenCalledTimes(1)
         expect(fn).toHaveBeenCalledTimes(2)
     })
 });

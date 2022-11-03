@@ -1,30 +1,38 @@
 import { track, trigger, triggerType } from './effect.js';
-import {equal} from '../util'
+import { equal } from '../util'
 
 export let ITERATE_KEY = Symbol()
 
-function createReactive(obj, isShallow = false) {
+function createReactive(obj, isShallow = false, isReadonly = false) {
     return new Proxy(obj, {
         get(target, key, receiver) {
             const res = Reflect.get(target, key, receiver);
-            track(target, key);
+            if (!isReadonly) {
+                track(target, key);
+            }
+
 
             if (isShallow) {
                 return res;
             }
 
             if (typeof res === 'object' && res !== null) {
-                return reactive(res)
+                return isReadonly ? readonly(res) : reactive(res)
             }
             return res;
         },
         // 拦截 key in obj
-        has (target, key, receiver) {
+        has(target, key, receiver) {
             const res = Reflect.has(target, key, receiver);
             track(target, key);
             return res;
         },
         set(target, key, newVal, receiver) {
+            if (isReadonly) {
+                console.warn(`${key} is Readonly`);
+                return true;
+            }
+
             const oldVal = target[key]
             const type = target.hasOwnProperty(key)
                 ? triggerType.SET
@@ -45,6 +53,10 @@ function createReactive(obj, isShallow = false) {
             return Reflect.ownKeys(target)
         },
         deleteProperty(target, key) {
+            if (isReadonly) {
+                console.warn(`${key} is Readonly`);
+                return true;
+            }
             const hasKey = target.hasOwnProperty(key)
             const res = Reflect.deleteProperty(target, key)
 
@@ -63,4 +75,11 @@ export function reactive(obj) {
 
 export function shallowReactive(obj) {
     return createReactive(obj, true)
+}
+
+export function readonly(obj) {
+    return createReactive(obj, false, true)
+}
+export function shallowReadonly(obj) {
+    return createReactive(obj, true, true)
 }

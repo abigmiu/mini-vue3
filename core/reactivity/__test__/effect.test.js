@@ -1,5 +1,5 @@
 import { describe, expect, it, vitest } from 'vitest';
-import { reactive, shallowReactive } from '../reactive.js';
+import { reactive, readonly, shallowReactive, shallowReadonly } from '../reactive.js';
 import { effect } from '../effect.js';
 import { vi } from 'vitest';
 
@@ -235,5 +235,31 @@ describe('scheduler', () => {
         obj.foo.bar++;
         expect(shallowFn).toHaveBeenCalledTimes(1)
         expect(fn).toHaveBeenCalledTimes(2)
+    })
+
+    it('readonly', () => {
+        let warnMsg
+        const spy = vitest.spyOn(console, 'warn')
+        spy.mockImplementation(msg => {
+            warnMsg = msg
+        })
+        const obj = readonly({
+            foo: {
+                bar: 1
+            }
+        })
+        const shallowObj = shallowReadonly({
+            foo: {
+                bar: 1
+            }
+        })
+        obj.foo.bar++
+        expect(obj.foo.bar).toBe(1)
+        shallowObj.foo.bar++
+        expect(shallowObj.foo.bar).toBe(2)
+
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(warnMsg).toBe('bar is Readonly')
+        spy.mockRestore()
     })
 });

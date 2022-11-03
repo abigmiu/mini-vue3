@@ -105,6 +105,15 @@ export function trigger(target, key, type) {
         })
     }
 
+    // 当操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关联的副作用函数
+    if (type === triggerType.ADD && Array.isArray(target)) {
+        const lengthEffects = keyDepsMap.get('length')
+        lengthEffects && lengthEffects.forEach(effectFn => {
+            if (activeEffect !== effectFn) {
+                depsToRun.add(effectFn);
+            }
+        })
+    }
 
     triggerEffects(depsToRun);
 }

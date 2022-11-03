@@ -257,9 +257,18 @@ describe('scheduler', () => {
         expect(obj.foo.bar).toBe(1)
         shallowObj.foo.bar++
         expect(shallowObj.foo.bar).toBe(2)
-
         expect(spy).toHaveBeenCalledTimes(1)
         expect(warnMsg).toBe('bar is Readonly')
         spy.mockRestore()
+    })
+
+    it('arr[index], index >= arr.length 时，触发 length 副作用', () => {
+        const arr = reactive([])
+        const fn = vitest.fn(() => arr.length)
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+
+        arr[0] = 1
+        expect(fn).toBeCalledTimes(2)
     })
 });

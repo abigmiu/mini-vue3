@@ -34,9 +34,19 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
             }
 
             const oldVal = target[key]
-            const type = target.hasOwnProperty(key)
-                ? triggerType.SET
-                : triggerType.ADD
+            /*  当对象为数组时:
+                - key 为索引值
+                - key < target.length => 不会影响数组长度 => SET 操作
+                - key >= target.length => 会影响数组长度 => ADD 操作
+            * */
+            const type = Array.isArray(target) ?
+                parseInt(key, 10) >= target.length
+                    ? triggerType.ADD
+                    : triggerType.SET
+                : target.hasOwnProperty(key)
+                    ? triggerType.SET
+                    : triggerType.ADD
+
             const res = Reflect.set(target, key, newVal, receiver);
             if (!equal(oldVal, newVal)) {
                 trigger(target, key, type);

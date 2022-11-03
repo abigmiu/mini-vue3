@@ -75,7 +75,7 @@ export function track(target, key) {
 
 function triggerEffects(deps) {
     deps.forEach((effect) => {
-        if (effect.options.scheduler) {
+        if (effect.options && effect.options.scheduler) {
             effect.options.scheduler(effect);
         } else {
             effect();
@@ -83,16 +83,16 @@ function triggerEffects(deps) {
     });
 }
 
-export function trigger(target, key, type) {
+export function trigger(target, key, type, newVal) {
     let keyDepsMap = bucket.get(target);
     if (!keyDepsMap) return;
     let deps = keyDepsMap.get(key);
 
     // new Set 防止死循环
-    const depsToRun = new Set();
+    const effectsToRun = new Set();
     deps && deps.forEach((effect) => {
         if (activeEffect !== effect) {
-            depsToRun.add(effect);
+            effectsToRun.add(effect);
         }
     });
 
@@ -100,20 +100,34 @@ export function trigger(target, key, type) {
         const iterateDeps = keyDepsMap.get(ITERATE_KEY)
         iterateDeps && iterateDeps.forEach((effectFn) => {
             if (activeEffect !== effectFn) {
-                depsToRun.add(effectFn)
+                effectsToRun.add(effectFn)
             }
         })
     }
 
-    // 当操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关联的副作用函数
-    if (type === triggerType.ADD && Array.isArray(target)) {
-        const lengthEffects = keyDepsMap.get('length')
-        lengthEffects && lengthEffects.forEach(effectFn => {
-            if (activeEffect !== effectFn) {
-                depsToRun.add(effectFn);
-            }
-        })
+    if (Array.isArray(target)) {
+        // 当操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关联的副作用函数
+        if (type === triggerType.ADD) {
+            const lengthEffects = keyDepsMap.get('length')
+            lengthEffects && lengthEffects.forEach(effectFn => {
+                if (activeEffect !== effectFn) {
+                    effectsToRun.add(effectFn);
+                }
+            })
+        }
+        // 如果操作的是数组，并且修改了数组的 length 属性
+        if (key === 'length') {
+            keyDepsMap.forEach((effects, key) => {
+                if (key >= newVal) {
+                    effects.forEach((effectFn) => {
+                        if (effectFn !== activeEffect) {
+                            effectsToRun.add(effectFn)
+                        }
+                    })
+                }
+            })
+        }
     }
 
-    triggerEffects(depsToRun);
+    triggerEffects(effectsToRun);
 }

@@ -1,5 +1,5 @@
 import { track, trigger, triggerType } from './effect.js';
-import { equal } from '../util'
+import { equal } from '../util.js'
 
 export let ITERATE_KEY = Symbol()
 
@@ -7,7 +7,7 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
     return new Proxy(obj, {
         get(target, key, receiver) {
             const res = Reflect.get(target, key, receiver);
-            if (!isReadonly) {
+            if (!isReadonly && typeof key !== 'symbol') {
                 track(target, key);
             }
 
@@ -40,26 +40,32 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
                 - key >= target.length => 会影响数组长度 => ADD 操作
             * */
             const type = Array.isArray(target) ?
-                parseInt(key, 10) >= target.length
-                    ? triggerType.ADD
-                    : triggerType.SET
+                Number(key) < target.length
+                    ? triggerType.SET
+                    : triggerType.ADD
                 : target.hasOwnProperty(key)
                     ? triggerType.SET
                     : triggerType.ADD
 
             const res = Reflect.set(target, key, newVal, receiver);
             if (!equal(oldVal, newVal)) {
-                trigger(target, key, type);
+                trigger(target, key, type, newVal);
             }
 
             return res;
         },
         // 拦截 for ... in
         ownKeys(target) {
-            // 因为 for...in 针对的是对象所有属性，所以无法用某个 key 来进行追踪
-            // 故这里使用 Symbol 来作为 for...in 追踪的唯一标识
-            // target - iterate_key - effect
-            track(target, ITERATE_KEY)
+            if (Array.isArray(target)) {
+                // 当数组 length 改变，会影响到 for...in 操作
+                // 所以当 effect 中有数组的 for...in 操作时，需要将 `length` 和 ownKeys 建立响应关联
+                track(target, 'length')
+              } else {
+                // 因为 for...in 针对的是对象所有属性，所以无法用某个 key 来进行追踪
+                // 故这里使用 Symbol 来作为 for...in 追踪的唯一标识
+                // target - iterate_key - effect
+                track(target, ITERATE_KEY)
+              }
             return Reflect.ownKeys(target)
         },
         deleteProperty(target, key) {

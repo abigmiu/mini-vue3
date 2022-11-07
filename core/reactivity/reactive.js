@@ -2,6 +2,7 @@ import { track, trigger, triggerType } from './effect.js';
 import { equal } from '../util.js'
 
 export let ITERATE_KEY = Symbol()
+const reactiveMap = new Map()
 
 function createReactive(obj, isShallow = false, isReadonly = false) {
     return new Proxy(obj, {
@@ -86,7 +87,11 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
 }
 
 export function reactive(obj) {
-    return createReactive(obj);
+    let existProxy = reactiveMap.get(obj)
+    if (!existProxy) {
+        reactiveMap.set(obj, (existProxy = createReactive(obj)))
+    }
+    return existProxy;
 }
 
 export function shallowReactive(obj) {

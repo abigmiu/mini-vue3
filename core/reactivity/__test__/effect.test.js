@@ -456,6 +456,28 @@ describe('scheduler', () => {
         })
         effect(fn)
         expect(fn).toHaveBeenCalledTimes(1)
+        p.set('key2', 'value2')
+        expect(fn).toHaveBeenCalledTimes(2)
     })
 
+    it('Map for ... in 迭代产生的值如果是对象, 也应该被代理', () => {
+        const key = {
+            key: 1,
+        }
+        const value = {
+            value: 1
+        }
+
+        const p = reactive(new Map([
+            [key, value]
+        ]))
+        const fn = vitest.fn(() => {
+            for (const [k, v] of p) {
+                expect(k.raw === key).toBe(true)
+                expect(v.raw === value).toBe(true)
+            }
+        })
+        effect(fn)
+        expect(fn).toBeCalledTimes(1)
+    })
 });

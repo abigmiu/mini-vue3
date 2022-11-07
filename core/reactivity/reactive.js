@@ -36,7 +36,15 @@ const mutableInstrumentations = {
         const target = this.raw;
         const iterator = target[Symbol.iterator]()
         track(target, ITERATE_KEY)
-        return iterator;
+        return {
+            next() {
+                const { value, done } = iterator.next();
+                return {
+                    done,
+                    value: value ? [wrap(value[0]), wrap(value[1])] : value
+                }
+            }
+        }
     },
     forEach(callback, thisArg) {
         const target = this.raw;

@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "jsdom": "^20.0.2",
     "vitest": "^0.24.3"
   },
   "type": "module"

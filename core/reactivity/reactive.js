@@ -30,11 +30,22 @@ const arrayInstrumentations = {};
 });
 
 // set处理
+const wrap = (val) => typeof val === 'object' ? reactive(val) : val;
 const mutableInstrumentations = {
-    forEach(callback) {
+    forEach(callback, thisArg) {
         const target = this.raw;
         track(target, ITERATE_KEY);
-        target.forEach(callback)
+        target.forEach((v, k) => {
+            callback.call(thisArg, wrap(v), wrap(k), this)
+        })
+    },
+    get(key) {
+        const target = this.raw;
+        const res = target.get(key);
+        track(target, key);
+        if (res) {
+            return wrap(res)
+        }
     },
     add(key) {
         const target = this.raw;

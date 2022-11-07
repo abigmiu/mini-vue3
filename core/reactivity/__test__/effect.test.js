@@ -419,10 +419,31 @@ describe('scheduler', () => {
         expect(fn).toHaveBeenCalledTimes(1)
     })
 
-    it('Map forEach', () => {
-        const p = reactive(new Map().set(1, 1))
+    it('Map.set 触发 forEach 副作用', () => {
+        const p = reactive(new Map([[{ key: 1 }, { value: 1 }]]))
         const fn = vitest.fn(() => {
             p.forEach(i => i)
         })
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+
+        p.set(2, 2)
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
+    it('Map forEach 回调函数的参数应自动转为响应式数据', () => {
+        const key = {
+            key: 1
+        }
+        const value = new Set([1, 2, 3])
+        const p = reactive(new Map().set(key, value))
+        const fn = vitest.fn(() => {
+            p.forEach((value, _) => value.size)
+        })
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+
+        p.get(key).delete(1)
+        expect(fn).toHaveBeenCalledTimes(2)
     })
 });

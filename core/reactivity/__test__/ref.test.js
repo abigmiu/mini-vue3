@@ -3,7 +3,7 @@ import { vitest } from "vitest";
 import { describe } from "vitest";
 import { effect } from "../effect";
 import { reactive } from "../reactive";
-import { isRef, ref } from "../ref";
+import { isRef, ref, toRef, toRefs } from "../ref";
 
 describe('ref', function () {
     it('ref.value', () => {
@@ -29,5 +29,37 @@ describe('ref', function () {
         expect(isRef(a)).toBe(true)
         expect(isRef(b)).toBe(false)
         expect(isRef(c)).toBe(false)
+    })
+
+    it('toRef', () => {
+        const obj = reactive({
+            a: 'a',
+            b: 'b',
+        })
+
+        const newObj = {
+            a: toRef(obj, 'a'),
+            b: toRef(obj, 'b')
+        }
+
+        const fn = vitest.fn(() => newObj.a.value)
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        newObj.a.value++
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
+
+    it('toRefs', () => {
+        const obj = reactive({
+            a: 'a',
+            b: 'b'
+        })
+        const newObj = toRefs(obj)
+        const fn = vitest.fn(() => newObj.a.value)
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        newObj.a.value++;
+        expect(fn).toHaveBeenCalledTimes(2)
     })
 })

@@ -11,8 +11,8 @@ export function ref(value) {
         get value() {
             return value
         },
-        set value(val) {
-            value = val
+        set value(newValue) {
+            value = newValue
         }
     }
 
@@ -21,4 +21,29 @@ export function ref(value) {
     })
 
     return reactive(wrapper)
+}
+
+export function toRef(obj, key) {
+    const wrapper = {
+        get value() {
+            return obj[key]
+        },
+        set value(newValue) {
+            obj[key] = newValue;
+        }
+    }
+
+    Object.defineProperty(wrapper, refFlag, {
+        value: true
+    })
+
+    return wrapper
+}
+
+export function toRefs(obj) {
+    const refs = {}
+    for (const k in obj) {
+        refs[k] = toRef(obj, k)
+    }
+    return refs;
 }

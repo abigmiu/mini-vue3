@@ -68,7 +68,7 @@ export function track(target, key) {
     if (!deps) {
         keyDepsMap.set(key, (deps = new Set()));
     }
-    if (!activeEffect && !shouldTrack) return;
+    if (!activeEffect || !shouldTrack) return;
     deps.add(activeEffect);
     activeEffect.deps.push(deps);
 }

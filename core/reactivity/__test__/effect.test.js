@@ -375,4 +375,20 @@ describe('scheduler', () => {
         expect(arrProxy.lastIndexOf(rawObj)).toBe(0)
         expect(arrProxy.lastIndexOf(arrProxy[0])).toBe(0)
     })
+
+    it('Set.size', () => {
+        const setProxy = reactive(new Set([1, 2, 3]))
+        const fn = vitest.fn(() => setProxy.size)
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+    })
+    it('Set.delete', () => {
+        const setProxy = reactive(new Set([1, 2, 3]))
+        const fn = vitest.fn(() => setProxy.size);
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        setProxy.delete(1)
+    })
 });

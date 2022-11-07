@@ -11,11 +11,12 @@ const arrayInstrumentations = {};
     arrayInstrumentations[method] = function (key) {
         let res = originalMethod.call(this, key);
         if (res === false || res === -1) {
-            res.originalMethod.call(this.raw, key)
+            res = originalMethod.call(this.raw, key)
         }
+        return res;
     }
-    return res;
-})
+
+});
 ['push', 'pop', 'shift', 'unshift', 'splice'].forEach(method => {
     const originalMethod = Array.prototype[method]
 
@@ -33,9 +34,16 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
             if (key === 'raw') {
                 return target
             }
-            const res = Reflect.get(target, key, receiver);
+
             if (!isReadonly && typeof key !== 'symbol') {
                 track(target, key);
+            }
+
+            if (target instanceof Set) {
+                if (key === 'size') {
+                    return Reflect.get(target, key, target)
+                }
+                return target[key].bind(target)
             }
 
             if (Array.isArray(target)) {
@@ -44,7 +52,7 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
                 }
             }
 
-
+            const res = Reflect.get(target, key, receiver);
             if (isShallow) {
                 return res;
             }

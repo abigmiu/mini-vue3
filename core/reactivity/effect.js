@@ -1,4 +1,4 @@
-import { ITERATE_KEY } from './reactive.js'
+import { ITERATE_KEY, shouldTrack } from './reactive.js'
 
 let activeEffect = null;
 const effectStack = [];
@@ -68,7 +68,7 @@ export function track(target, key) {
     if (!deps) {
         keyDepsMap.set(key, (deps = new Set()));
     }
-    if (!activeEffect) return;
+    if (!activeEffect && !shouldTrack) return;
     deps.add(activeEffect);
     activeEffect.deps.push(deps);
 }

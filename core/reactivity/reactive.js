@@ -2,6 +2,7 @@ import { track, trigger, triggerType } from './effect.js';
 import { equal } from '../util.js'
 
 export let ITERATE_KEY = Symbol()
+export let shouldTrack = true
 const reactiveMap = new Map()
 
 const arrayInstrumentations = {};
@@ -15,6 +16,16 @@ const arrayInstrumentations = {};
     }
     return res;
 })
+['push', 'pop', 'shift', 'unshift', 'splice'].forEach(method => {
+    const originalMethod = Array.prototype[method]
+
+    arrayInstrumentations[method] = function (...args) {
+        shouldTrack = false;
+        let res = originalMethod.apply(this.raw, args)
+        shouldTrack = true;
+        return res;
+    }
+});
 
 function createReactive(obj, isShallow = false, isReadonly = false) {
     return new Proxy(obj, {

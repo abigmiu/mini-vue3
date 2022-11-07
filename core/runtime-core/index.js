@@ -13,7 +13,18 @@ export function createRender(options) {
         const el = document.createElement(vnode.type);
         if (typeof vnode.children === 'string') {
             setElement(el, vnode.children)
+        } else if (Array.isArray(vnode.children)) {
+            vnode.children.forEach((child) => {
+                patch(null, child, el)
+            })
         }
+
+        if (vnode.props) {
+            for (const key in vnode.props) {
+                el.setAttribute(key, vnode.props[key])
+            }
+        }
+
         insert(el, container)
     }
 

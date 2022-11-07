@@ -32,6 +32,12 @@ const arrayInstrumentations = {};
 // set处理
 const wrap = (val) => typeof val === 'object' ? reactive(val) : val;
 const mutableInstrumentations = {
+    [Symbol.iterator]() {
+        const target = this.raw;
+        const iterator = target[Symbol.iterator]()
+        track(target, ITERATE_KEY)
+        return iterator;
+    },
     forEach(callback, thisArg) {
         const target = this.raw;
         track(target, ITERATE_KEY);
@@ -70,7 +76,7 @@ const mutableInstrumentations = {
         if (!equal(rawVal, oldVal)) {
             trigger(target, key, type)
         }
-     },
+    },
     delete(key) {
         const target = this.raw;
         const hasKey = target.has(key);
@@ -160,12 +166,12 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
                 // 当数组 length 改变，会影响到 for...in 操作
                 // 所以当 effect 中有数组的 for...in 操作时，需要将 `length` 和 ownKeys 建立响应关联
                 track(target, 'length')
-              } else {
+            } else {
                 // 因为 for...in 针对的是对象所有属性，所以无法用某个 key 来进行追踪
                 // 故这里使用 Symbol 来作为 for...in 追踪的唯一标识
                 // target - iterate_key - effect
                 track(target, ITERATE_KEY)
-              }
+            }
             return Reflect.ownKeys(target)
         },
         deleteProperty(target, key) {

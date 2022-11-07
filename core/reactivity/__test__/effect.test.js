@@ -446,4 +446,16 @@ describe('scheduler', () => {
         p.get(key).delete(1)
         expect(fn).toHaveBeenCalledTimes(2)
     })
+
+    it('Map 的迭代器方法', () => {
+        const p = reactive(new Map([['key1', 'value1']]))
+        const fn = vitest.fn(() => {
+            for (const [key, value] of p) {
+                [key, value]
+            }
+        })
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+    })
+
 });

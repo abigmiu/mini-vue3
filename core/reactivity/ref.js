@@ -1,16 +1,24 @@
 import { reactive } from "./reactive";
 
-export function ref(value) {
-    const wrapper = reactive({
-        value
-    })
+const refFlag = '_v_isRef'
 
-    return {
+export function isRef(value) {
+    return !!value[refFlag]
+}
+
+export function ref(value) {
+    const wrapper = {
         get value() {
-            return wrapper.value
+            return value
         },
         set value(val) {
-            wrapper.value = val
+            value = val
         }
     }
+
+    Object.defineProperty(wrapper, refFlag, {
+        value: true,
+    })
+
+    return reactive(wrapper)
 }

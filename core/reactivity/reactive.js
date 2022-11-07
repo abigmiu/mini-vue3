@@ -42,7 +42,19 @@ const mutableInstrumentations = {
 
         return res;
     },
+    set(key, value) {
+        const target = this.raw;
+        const hasKey = target.has(key);
+        const oldVal = target.get(key);
 
+        const rawVal = value.raw || value;
+        target.set(key, rawVal);
+
+        const type = hasKey ? triggerType.SET : triggerType.ADD
+        if (!equal(rawVal, oldVal)) {
+            trigger(target, key, type)
+        }
+     },
     delete(key) {
         const target = this.raw;
         const hasKey = target.has(key);
@@ -65,7 +77,7 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
 
 
 
-            if (target instanceof Set) {
+            if (target instanceof Set || target instanceof Map) {
                 if (key === 'size') {
                     track(target, ITERATE_KEY)
                     return Reflect.get(target, key, target)

@@ -404,4 +404,18 @@ describe('scheduler', () => {
         setProxy.delete(1)
         expect(fn).toHaveBeenCalledTimes(3)
     })
+
+    it('Map 避免数组污染', () => {
+        const m = new Map()
+        const p1 = reactive(m)
+        const p2 = reactive(new Map())
+        p1.set('p2', p2)
+        const fn = vitest.fn(() => m.get('p2').size)
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+
+        m.get('p2').set('foo', 1)
+        expect(fn).toHaveBeenCalledTimes(1)
+    })
 });

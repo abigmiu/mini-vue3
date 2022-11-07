@@ -418,4 +418,11 @@ describe('scheduler', () => {
         m.get('p2').set('foo', 1)
         expect(fn).toHaveBeenCalledTimes(1)
     })
+
+    it('Map forEach', () => {
+        const p = reactive(new Map().set(1, 1))
+        const fn = vitest.fn(() => {
+            p.forEach(i => i)
+        })
+    })
 });

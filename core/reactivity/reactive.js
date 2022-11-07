@@ -31,6 +31,11 @@ const arrayInstrumentations = {};
 
 // set处理
 const mutableInstrumentations = {
+    forEach(callback) {
+        const target = this.raw;
+        track(target, ITERATE_KEY);
+        target.forEach(callback)
+    },
     add(key) {
         const target = this.raw;
         const hasKey = target.has(key)

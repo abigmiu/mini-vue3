@@ -365,4 +365,14 @@ describe('scheduler', () => {
         const arr = reactive([obj])
         expect(arr.includes(obj)).toBe(true)
     })
+    it('arrProxy.indexOf/lastIndexOf(rawObj)', function () {
+        const rawObj = {}
+        const arrProxy = reactive([rawObj])
+
+        expect(arrProxy.indexOf(rawObj)).toBe(0)
+        expect(arrProxy.indexOf(arrProxy[0])).toBe(0)
+
+        expect(arrProxy.lastIndexOf(rawObj)).toBe(0)
+        expect(arrProxy.lastIndexOf(arrProxy[0])).toBe(0)
+    })
 });

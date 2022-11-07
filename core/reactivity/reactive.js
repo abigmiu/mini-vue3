@@ -4,12 +4,17 @@ import { equal } from '../util.js'
 export let ITERATE_KEY = Symbol()
 const reactiveMap = new Map()
 
-const originalMethod = Array.prototype.includes;
-const arrayInstrumentations = {
-    includes(key) {
-        return originalMethod.call(this, key) || originalMethod.call(this.raw, key)
+const arrayInstrumentations = {};
+['indexOf', 'lastIndexOf', 'includes'].forEach((method) => {
+    const originalMethod = Array.prototype[method];
+    arrayInstrumentations[method] = function (key) {
+        let res = originalMethod.call(this, key);
+        if (res === false || res === -1) {
+            res.originalMethod.call(this.raw, key)
+        }
     }
-}
+    return res;
+})
 
 function createReactive(obj, isShallow = false, isReadonly = false) {
     return new Proxy(obj, {

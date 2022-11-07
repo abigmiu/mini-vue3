@@ -509,4 +509,62 @@ describe('scheduler', () => {
         p.set('key2', 'value2')
         expect(fn).toHaveBeenCalledTimes(2)
     })
+
+
+    it('Map.keys', () => {
+        const p = reactive(new Map([['key1', 'value1']]))
+        const fn = vitest.fn(() => {
+            for (const key of p.keys()) {
+                key
+            }
+        })
+
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        p.set('key2', 'value2')
+        expect(fn).toHaveBeenCalledTimes(2)
+
+        p.set('key1', 'changed')
+        expect(fn).toBeCalledTimes(2)
+    })
+
+    it('Map for...of 迭代产生的代理对象被修改时，应触发 for...of 副作用', function() {
+        const key = { key: 1 }
+        const key2 = { key2 : 2}
+        const mapValue = new Map().set('bar', 1)
+        const objValue = { foo: 1}
+        const p = reactive(new Map([
+          [key, mapValue],
+          [key2, objValue]
+        ]))
+        const fn = vitest.fn(() => {
+          for (const [k, v] of p) {
+            [k, v.foo || v.get('bar')]
+          }
+        })
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        p.get(key2)['foo'] = 2
+        expect(fn).toHaveBeenCalledTimes(2)
+        p.get(key).set('bar', 2)
+        expect(fn).toHaveBeenCalledTimes(3)
+        // 修改相同的值，不触发副作用
+        p.get(key).set('bar', 2)
+        expect(fn).toHaveBeenCalledTimes(3)
+
+        /**
+         * 需要理解一点：当执行 effect(fn) 时，activeEffect 就是 fn
+         * 所以此时所有的 track 操作都会将 activeEffect 收集为依赖，
+         * 上面代码中的依赖关系为
+         * - targetMap
+         *   - p
+         *     - ITERATE_KEY -> fn
+         *   - mapValue
+         *     - foo -> fn
+         *   - objValue
+         *     - bar -> fn
+         */
+      });
 });

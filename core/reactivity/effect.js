@@ -1,4 +1,4 @@
-import { ITERATE_KEY, shouldTrack } from './reactive.js'
+import { ITERATE_KEY, shouldTrack, MAP_KEY_ITERATE_KEY } from './reactive.js'
 import {
     isMap,
   } from '../util';
@@ -131,6 +131,17 @@ export function trigger(target, key, type, newVal) {
             })
         }
     }
+
+    if (
+        (type === triggerType.ADD || type === triggerType.DELETE) && (isMap(target))
+    ) {
+        const mapKeyIterateDeps = keyDepsMap.get(MAP_KEY_ITERATE_KEY)
+        mapKeyIterateDeps && mapKeyIterateDeps.forEach((effect) => {
+            if (activeEffect !== effect) {
+                effectsToRun.add(effect);
+            }
+        });
+     }
 
     triggerEffects(effectsToRun);
 }

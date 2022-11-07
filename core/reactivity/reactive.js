@@ -2,6 +2,7 @@ import { track, trigger, triggerType } from './effect.js';
 import { equal, isMap, isSet } from '../util.js'
 
 export let ITERATE_KEY = Symbol()
+export let MAP_KEY_ITERATE_KEY = Symbol()
 export let shouldTrack = true
 const reactiveMap = new Map()
 
@@ -30,16 +31,25 @@ const arrayInstrumentations = {};
 });
 
 // set处理
+let _mutableMethodName
 const wrap = (val) => typeof val === 'object' ? reactive(val) : val;
 const iterateMethod = function () {
     const target = this.raw
     /**
+     * _mutableMethodName
      * Map.entries 通过 target[Symbol.iterator] 获取迭代器对象
      * Map.values 通过 target.values 获取迭代器对象
      */
-    const iterator = target[Symbol.iterator]() || target.values()
+    const iterator = target[_mutableMethodName]()
 
-    track(target, ITERATE_KEY)
+
+    if (_mutableMethodName === 'keys') {
+        track(target, MAP_KEY_ITERATE_KEY)
+    } else {
+        track(target, ITERATE_KEY)
+    }
+
+
 
     // 自定义迭代器
     return {
@@ -69,6 +79,7 @@ const mutableInstrumentations = {
     [Symbol.iterator]: iterateMethod,
     entries: iterateMethod,
     values: iterateMethod,
+    keys: iterateMethod,
     forEach(callback, thisArg) {
         const target = this.raw;
         track(target, ITERATE_KEY);
@@ -135,6 +146,7 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
                     track(target, ITERATE_KEY)
                     return Reflect.get(target, key, target)
                 }
+                _mutableMethodName = key
                 return mutableInstrumentations[key]
             }
 

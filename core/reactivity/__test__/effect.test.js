@@ -359,4 +359,10 @@ describe('scheduler', () => {
     * */
         expect(arr.includes(arr[0])).toBe(true)
     })
+
+    it('arr.includes(rawObj)', function () {
+        const obj = {}
+        const arr = reactive([obj])
+        expect(arr.includes(obj)).toBe(true)
+    })
 });

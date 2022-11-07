@@ -4,12 +4,28 @@ import { equal } from '../util.js'
 export let ITERATE_KEY = Symbol()
 const reactiveMap = new Map()
 
+const originalMethod = Array.prototype.includes;
+const arrayInstrumentations = {
+    includes(key) {
+        return originalMethod.call(this, key) || originalMethod.call(this.raw, key)
+    }
+}
+
 function createReactive(obj, isShallow = false, isReadonly = false) {
     return new Proxy(obj, {
         get(target, key, receiver) {
+            if (key === 'raw') {
+                return target
+            }
             const res = Reflect.get(target, key, receiver);
             if (!isReadonly && typeof key !== 'symbol') {
                 track(target, key);
+            }
+
+            if (Array.isArray(target)) {
+                if (arrayInstrumentations.hasOwnProperty(key)) {
+                    return Reflect.get(arrayInstrumentations, key, receiver);
+                }
             }
 
 

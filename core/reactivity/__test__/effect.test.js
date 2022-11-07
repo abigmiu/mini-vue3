@@ -391,4 +391,17 @@ describe('scheduler', () => {
         expect(fn).toHaveBeenCalledTimes(1)
         setProxy.delete(1)
     })
+
+    it('add 和 delete 方法应当触发 size 副作用', () => {
+        const setProxy = reactive(new Set([1, 2, 3]))
+        const fn = vitest.fn(() => setProxy.size);
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+
+        setProxy.add(4)
+        expect(fn).toHaveBeenCalledTimes(2)
+        setProxy.delete(1)
+        expect(fn).toHaveBeenCalledTimes(3)
+    })
 });

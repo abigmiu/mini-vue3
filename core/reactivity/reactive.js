@@ -5,6 +5,7 @@ export let ITERATE_KEY = Symbol()
 export let shouldTrack = true
 const reactiveMap = new Map()
 
+// 数组处理
 const arrayInstrumentations = {};
 ['indexOf', 'lastIndexOf', 'includes'].forEach((method) => {
     const originalMethod = Array.prototype[method];
@@ -28,6 +29,33 @@ const arrayInstrumentations = {};
     }
 });
 
+// set处理
+const mutableInstrumentations = {
+    add(key) {
+        const target = this.raw;
+        const hasKey = target.has(key)
+        const res = target.add(key)
+
+        if (!hasKey) {
+            trigger(target, ITERATE_KEY, triggerType.ADD)
+        }
+
+        return res;
+    },
+
+    delete(key) {
+        const target = this.raw;
+        const hasKey = target.has(key);
+        const res = target.delete(key);
+
+        if (hasKey) {
+            trigger(target, ITERATE_KEY, triggerType.DELETE)
+        }
+
+        return res;
+    }
+}
+
 function createReactive(obj, isShallow = false, isReadonly = false) {
     return new Proxy(obj, {
         get(target, key, receiver) {
@@ -35,21 +63,24 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
                 return target
             }
 
-            if (!isReadonly && typeof key !== 'symbol') {
-                track(target, key);
-            }
+
 
             if (target instanceof Set) {
                 if (key === 'size') {
+                    track(target, ITERATE_KEY)
                     return Reflect.get(target, key, target)
                 }
-                return target[key].bind(target)
+                return mutableInstrumentations[key]
             }
 
             if (Array.isArray(target)) {
                 if (arrayInstrumentations.hasOwnProperty(key)) {
                     return Reflect.get(arrayInstrumentations, key, receiver);
                 }
+            }
+
+            if (!isReadonly && typeof key !== 'symbol') {
+                track(target, key);
             }
 
             const res = Reflect.get(target, key, receiver);

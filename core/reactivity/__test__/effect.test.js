@@ -495,4 +495,18 @@ describe('scheduler', () => {
         p.set('key2', 'value2')
         expect(fn).toBeCalledTimes(2)
     })
+
+    it('Map.values', () => {
+        const p = reactive(new Map([['key1', 'value1']]))
+        const fn = vitest.fn(() => {
+            for (const value of p.values()) {
+                value
+            }
+        })
+
+        effect(fn)
+        expect(fn).toHaveBeenCalledTimes(1)
+        p.set('key2', 'value2')
+        expect(fn).toHaveBeenCalledTimes(2)
+    })
 });

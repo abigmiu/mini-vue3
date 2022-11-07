@@ -31,32 +31,44 @@ const arrayInstrumentations = {};
 
 // set处理
 const wrap = (val) => typeof val === 'object' ? reactive(val) : val;
-const iterateMethod = function() {
+const iterateMethod = function () {
     const target = this.raw
-    const iterator = target[Symbol.iterator]()
+    /**
+     * Map.entries 通过 target[Symbol.iterator] 获取迭代器对象
+     * Map.values 通过 target.values 获取迭代器对象
+     */
+    const iterator = target[Symbol.iterator]() || target.values()
 
     track(target, ITERATE_KEY)
 
     // 自定义迭代器
     return {
-      // 一个对象可以同时实现 可迭代协议 和 迭代器协议：比如生成器
-      next() {
-        const { value, done } = iterator.next()
-        return {
-          done,
-          // 对迭代过程中的值进行包装
-          value: value ? [wrap(value[0]), wrap(value[1])] : value
+        // 一个对象可以同时实现 可迭代协议 和 迭代器协议：比如生成器
+        next() {
+            const { value, done } = iterator.next()
+            return {
+                done,
+                // 对迭代过程中的值进行包装
+                value: value
+                    ? (
+                        value.length === 2
+                            ? [wrap(value[0]), wrap(value[1])]
+                            // values 只有一个值
+                            : wrap(value)
+                    )
+                    : value
+            }
+        },
+        // p.entries is not a function or its return value is not iterable
+        [Symbol.iterator]() {
+            return this
         }
-      },
-      // p.entries is not a function or its return value is not iterable
-      [Symbol.iterator]() {
-        return this
-      }
     }
-  }
+}
 const mutableInstrumentations = {
     [Symbol.iterator]: iterateMethod,
     entries: iterateMethod,
+    values: iterateMethod,
     forEach(callback, thisArg) {
         const target = this.raw;
         track(target, ITERATE_KEY);

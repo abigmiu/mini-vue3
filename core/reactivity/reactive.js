@@ -1,5 +1,5 @@
 import { track, trigger, triggerType } from './effect.js';
-import { equal } from '../util.js'
+import { equal, isMap, isSet } from '../util.js'
 
 export let ITERATE_KEY = Symbol()
 export let shouldTrack = true
@@ -93,7 +93,7 @@ function createReactive(obj, isShallow = false, isReadonly = false) {
 
 
 
-            if (target instanceof Set || target instanceof Map) {
+            if (isSet(target) || isMap(target)) {
                 if (key === 'size') {
                     track(target, ITERATE_KEY)
                     return Reflect.get(target, key, target)

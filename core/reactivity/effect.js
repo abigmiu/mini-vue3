@@ -1,4 +1,7 @@
 import { ITERATE_KEY, shouldTrack } from './reactive.js'
+import {
+    isMap,
+  } from '../util';
 
 let activeEffect = null;
 const effectStack = [];
@@ -96,7 +99,7 @@ export function trigger(target, key, type, newVal) {
         }
     });
 
-    if (type === triggerType.ADD || type === triggerType.DELETE) {
+    if (type === triggerType.ADD || type === triggerType.DELETE || (isMap(target) && type === triggerType.SET)) {
         const iterateDeps = keyDepsMap.get(ITERATE_KEY)
         iterateDeps && iterateDeps.forEach((effectFn) => {
             if (activeEffect !== effectFn) {

@@ -2,11 +2,21 @@ export function createRender(options) {
     const { createElement, insert, setElement, patchProps } = options;
 
     function patch(vnode1, vnode2, container) {
-        if (!vnode1) {
-            mountElement(vnode2, container)
-        } else {
-
+        if (vnode1 && vnode1.type !== vnode2.type) {
+            unmount(vnode1)
+            vnode1 = null
         }
+        const { type } = vnode2
+
+        if (typeof type === 'string') {
+            if (!vnode1) {
+                mountElement(vnode2, container)
+            } else {
+                patchElement(vnode1, vnode2)
+            }
+        } else if (type === 'object') {
+            // 组件
+        } else { }
     }
 
     function mountElement(vnode, container) {

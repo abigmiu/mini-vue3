@@ -22,6 +22,28 @@ export function createRender(options) {
         if (vnode.props) {
             for (const key in vnode.props) {
                 el.setAttribute(key, vnode.props[key])
+                /**
+                 * HTML Attributes 的作用是设置与之对应的 DOM Properties 的初始值
+                 * 判断 key 是否存在对应的 DOM Properties
+                 * -> div 就没有 input 的 form 属性
+                 */
+                if (key in el) {
+                    /**
+                     * 获取节点类型
+                     * typeof button['disabled'] === 'boolean'
+                     * typeof button['id'] === 'string'
+                     */
+                    const type = typeof el[key]
+                    const value = vnode.props[key]
+
+                    if (type === 'boolean' && value === '') {
+                        el[key] = true;
+                    } else {
+                        el[key] = value
+                    }
+                } else {
+                    el.setAttribute(key, vnode.props[key]);
+                }
             }
         }
 

@@ -60,14 +60,48 @@ describe('render', () => {
         expect(root.innerHTML).toBe('<div id="foo"><p>hello</p></div>')
     })
     it('button disabled should be set correctly', function () {
-        const root = document.createElement('div')
-        const button = {
+        /**
+         * const a = document.createElement('button')
+         * a['disabled'] = true
+         * >> a
+         * >> <button disabled></button>
+         *
+         * a['disabled'] = false
+         * >> a
+         * >> <button></button>
+         *
+         * typeof a['disabled']
+         * >> 'boolean'
+         */
+        const root1 = document.createElement('div')
+        const root2 = document.createElement('div')
+        const root3 = document.createElement('div')
+
+        const button1 = {
             type: 'button',
             props: {
-                disabled: false
+                disabled: false,
             }
         }
+        domRenderer.render(button1, root1);
+        expect(root1.innerHTML).toBe('<button></button>')
 
-        domRenderer.render(button, root)
+        const button2 = {
+            type: 'button',
+            props: {
+                disabled: true,
+            }
+        }
+        domRenderer.render(button2, root2)
+        expect(root2.innerHTML).toBe('<button disabled=\"\"></button>')
+
+        const button3 = {
+            type: 'button',
+            props: {
+                disabled: ''
+            }
+        }
+        domRenderer.render(button3, root3)
+        expect(root3.innerHTML).toBe('<button disabled=\"\"></button>')
     });
 })

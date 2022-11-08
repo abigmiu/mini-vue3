@@ -10,7 +10,7 @@ export function createRender(options) {
     }
 
     function mountElement(vnode, container) {
-        const el = document.createElement(vnode.type);
+        const el = vnode.el = document.createElement(vnode.type);
         if (typeof vnode.children === 'string') {
             setElement(el, vnode.children)
         } else if (Array.isArray(vnode.children)) {
@@ -28,12 +28,20 @@ export function createRender(options) {
         insert(el, container)
     }
 
+    function unmount(vnode) {
+        const el = vnode.el;
+        const parent = el.parentNode;
+        if (parent) {
+            parent.removeChild(el);
+        }
+    }
+
     function render(vnode, container) {
         if (vnode) {
             patch(container._vnode, vnode, container)
         } else {
             if (container._vnode) {
-                container.innerHTML = ''
+                unmount(container._vnode)
             }
         }
 

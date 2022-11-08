@@ -170,4 +170,18 @@ describe('render', () => {
         domRenderer.render(null, root);
         expect(root.innerHTML).toBe('')
     })
+
+    it('事件绑定', () => {
+        const root = document.createElement('div')
+        const event = () => alert('click')
+        const vnode = {
+            type: 'button',
+            props: {
+                id: 'foo',
+                onClick: event,
+            }
+        }
+        domRenderer.render(vnode, root)
+        console.dir(root)
+    })
 })

@@ -184,4 +184,18 @@ describe('render', () => {
         domRenderer.render(vnode, root)
         console.dir(root)
     })
+
+    it('多个事件绑定', () => {
+        const root = document.createElement('div')
+        const event = () => alert('click')
+        const vnode = {
+            type: 'button',
+            props: {
+                id: 'foo',
+                onClick: event,
+                oncontextmenu: event,
+            }
+        }
+        domRenderer.render(vnode, root)
+    })
 })

@@ -13,19 +13,25 @@ function shouldSetAsProps(key, el, nextValue) {
     return key in el;
 }
 
-function handleEvent(el, key, eventCallback) {
-    let invoker = el._vei;
+function handleEvent(el, key, eventCallback, invoker) {
     const name = key.slice(2).toLowerCase()
 
+    // 如果传入了新的绑定事件
     if (eventCallback) {
+        // 1. 如果 invoker 不存在，则初始化 invoker，并且将 invoker 缓存到 el._vei 中
+        // 2. 绑定事件名以及回调
         if (!invoker) {
-            invoker = el._vei = (e) => invoker.value(e)
+            invoker = el._vei[key] = (e) => invoker.value(e)
             invoker.value = eventCallback
             el.addEventListener(name, eventCallback)
         } else {
+            // 如果 invoker 已经存在，则只需要将 eventCallback 替换即可，不需要移除绑定事件
+            // - 原本 addEventListener: click - eventCallback
+            // - 现在 addEventListener: click - invoker.value - eventCallback
             invoker.value = eventCallback
         }
     } else if (invoker) {
+        // 新的绑定函数不存在，但是旧的函数存在，则移除事件
         el.removeEventListener(name, invoker)
     }
 }
@@ -58,7 +64,9 @@ export const domRenderer = createRender({
         if (key === 'class') {
             el.className = nextValue
         } else if (/^on/.test(key)) {
-            handleEvent(el, key, nextValue)
+            const invokers = el._vei || (el._vei = {})
+            const invoker = invokers[key]
+            handleEvent(el, key, nextValue, invoker)
         } else if (shouldSetAsProps(key, el, nextValue)) {
             /**
              * HTML Attributes 的作用是设置与之对应的 DOM Properties 的初始值

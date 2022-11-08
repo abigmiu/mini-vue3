@@ -198,4 +198,17 @@ describe('render', () => {
         }
         domRenderer.render(vnode, root)
     })
+
+    it('一个事件绑定多个回调函数', () => {
+        const root = document.createElement('div')
+        const event = () => alert('click')
+        const vnode = {
+            type: 'button',
+            props: {
+                id: 'foo',
+                onClick: [event, event],
+            }
+        }
+        domRenderer.render(vnode, root)
+    })
 })

@@ -104,4 +104,31 @@ describe('render', () => {
         domRenderer.render(button3, root3)
         expect(root3.innerHTML).toBe('<button disabled=\"\"></button>')
     });
+
+    it('只读属性应当被正确渲染', () => {
+        const root = document.createElement('div')
+
+        const vnode = {
+            type: 'div',
+            children: [
+                {
+                    type: 'form',
+                    props: {
+                        id: 'form1'
+                    },
+                    children: [],
+                },
+                {
+                    type: 'input',
+                    props: {
+                        form: 'form1',
+                    },
+                    children: [],
+                }
+            ]
+        }
+
+        domRenderer.render(vnode, root)
+        expect(root.innerHTML).toBe('<div><form id="form1"></form><input form="form1"></div>')
+    })
 })

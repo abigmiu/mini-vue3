@@ -1,6 +1,49 @@
 export function createRender(options) {
     const { createElement, insert, setElement, patchProps } = options;
 
+    function patchChildren(vnode1, vnode2, container) {
+        if (typeof vnode2.children === 'string') {
+            if (Array.isArray(vnode1.children)) {
+                vnode1.children.forEach(c => unmount(c))
+            }
+            setElement(container, vnode2.children)
+        } else if (Array.isArray(vnode2.children)) {
+            if (Array.isArray(vnode1.children)) {
+                vnode1.children.forEach(c => unmount(c))
+                vnode2.children.forEach(c => patch(null, c, container))
+            } else {
+                setElement(container, '')
+                vnode2.children.forEach(c => patch(null, c, container))
+            }
+        } else {
+            if (Array.isArray(vnode1.children)) {
+                vnode1.children.forEach(c => unmount(c))
+            }
+            setElement(container, '');
+        }
+    }
+
+    function patchElement(vnode1, vnode2) {
+        const el = vnode2.el = vnode1.el;
+        const oldProps = vnode1.props
+        const newProps = vnode2.props;
+
+
+        for (const key in newProps) {
+            if (newProps[key] !== oldProps[key]) {
+                patchProps(el, key, oldProps[key], newProps[key]);
+            }
+        }
+
+        for (const key in oldProps) {
+            if (!(key in newProps)) {
+                patchProps(el, key, oldProps[key], null)
+            }
+        }
+
+        patchChildren(vnode1, vnode2, el);
+    }
+
     function patch(vnode1, vnode2, container) {
         if (vnode1 && vnode1.type !== vnode2.type) {
             unmount(vnode1)

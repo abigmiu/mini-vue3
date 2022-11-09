@@ -125,5 +125,11 @@ export const domRenderer = createRender({
     },
     createText(text) {
         return document.createTextNode(text)
+    },
+    setComment(el, text) {
+        el.nodeValue = text;
+    },
+    createComment(text) {
+        return document.createComment(text)
     }
 })

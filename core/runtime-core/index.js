@@ -1,7 +1,17 @@
 export const TEXT = Symbol()
+export const COMMENT = Symbol()
 
 export function createRender(options) {
-    const { createElement, insert, setElement, patchProps, createText, setText } = options;
+    const {
+        createElement,
+        insert,
+        setElement,
+        patchProps,
+        createText,
+        setText,
+        createComment,
+        setComment,
+    } = options;
 
     function patchChildren(vnode1, vnode2, container) {
         if (typeof vnode2.children === 'string') {

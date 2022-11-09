@@ -1,5 +1,6 @@
 export const TEXT = Symbol()
 export const COMMENT = Symbol()
+export const Fragment = Symbol()
 
 export function createRender(options) {
     const {
@@ -69,7 +70,8 @@ export function createRender(options) {
             } else {
                 patchElement(vnode1, vnode2)
             }
-        } else if (type === TEXT) {
+        }
+        else if (type === TEXT) {
             if (!vnode1) {
                 const el = vnode2 = createText(vnode2.children)
                 insert(el, container)
@@ -78,6 +80,24 @@ export function createRender(options) {
                 if (vnode2.children !== vnode1.children) {
                     setText(el, vnode2.children)
                 }
+            }
+        }
+        else if (type === COMMENT) {
+            if (!vnode1) {
+                const el = vnode2.el = createComment(vnode2.children)
+                insert(el, container)
+            } else {
+                const el = vnode1.el = vnode2.el
+                if (vnode2.children !== vnode1.children) {
+                    setComment(el, vnode2.children);
+                }
+            }
+        }
+        else if (type === Fragment) {
+            if (!vnode1) {
+                vnode2.children.forEach(c => patch(null, c, container))
+            } else {
+                patchChildren(vnode1, vnode2, container)
             }
         }
         else if (type === 'object') {

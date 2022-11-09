@@ -211,4 +211,39 @@ describe('render', () => {
         }
         domRenderer.render(vnode, root)
     })
+
+    it('事件冒泡和更新时间问题', () => {
+        const bol = ref(false)
+        const root = document.createElement('div')
+
+        effect(() => {
+            const vnode = {
+                type: 'div',
+                props: bol.value
+                    ? {
+                        onClick: () => {
+                            alert('click')
+                        },
+                        class: 'box'
+                    }
+                    : {
+                        onClick: () => { },
+                        class: 'box'
+                    },
+                children: [
+                    {
+                        type: 'div',
+                        props: {
+                            onClick: () => {
+                                bol.value = true
+                            },
+                            class: 'box2'
+                        },
+                        children: 'text'
+                    }
+                ]
+            }
+            domRenderer.render(vnode, root)
+        })
+    })
 })

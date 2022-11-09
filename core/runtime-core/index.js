@@ -1,5 +1,7 @@
+export const TEXT = Symbol()
+
 export function createRender(options) {
-    const { createElement, insert, setElement, patchProps } = options;
+    const { createElement, insert, setElement, patchProps, createText, setText } = options;
 
     function patchChildren(vnode1, vnode2, container) {
         if (typeof vnode2.children === 'string') {
@@ -57,7 +59,18 @@ export function createRender(options) {
             } else {
                 patchElement(vnode1, vnode2)
             }
-        } else if (type === 'object') {
+        } else if (type === TEXT) {
+            if (!vnode1) {
+                const el = vnode2 = createText(vnode2.children)
+                insert(el, container)
+            } else {
+                const el = vnode1.el = vnode2.el
+                if (vnode2.children !== vnode1.children) {
+                    setText(el, vnode2.children)
+                }
+            }
+        }
+        else if (type === 'object') {
             // 组件
         } else { }
     }

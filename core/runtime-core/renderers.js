@@ -70,9 +70,35 @@ export const domRenderer = createRender({
         if (key === 'class') {
             el.className = nextValue
         } else if (/^on/.test(key)) {
+            if (preValue === nextValue) {
+                return
+              }
             const invokers = el._vei || (el._vei = {})
-            const invoker = invokers[key]
-            handleEvent(el, key, nextValue, invoker)
+            let invoker = invokers[key]
+            const name = key.slice(2).toLowerCase()
+            if (nextValue) {
+                if (!invoker) {
+                    invoker = el._vei[key] = () => {
+                        if (e.timeStamp < invoker.attached) {
+                            return;
+                        }
+
+                        if (Array.isArray(invoker.value)) {
+                            invoker.value.forEach(cb => cb(e))
+                        } else {
+                            invoker.value()
+                        }
+                    }
+                    invoker.value = nextValue
+                    invoker.attached = performance.now()
+                    el.addEventListener(name, invoker)
+                } else {
+                    invoker.attached = performance.now()
+                    invoker.value = nextValue;
+                }
+            } else if (invoker) {
+                el.removeEventListener(name, invoker)
+            }
         } else if (shouldSetAsProps(key, el, nextValue)) {
             /**
              * HTML Attributes 的作用是设置与之对应的 DOM Properties 的初始值
@@ -93,5 +119,11 @@ export const domRenderer = createRender({
         } else {
             el.setAttribute(key, nextValue)
         }
+    },
+    setText(el, text) {
+        el.nodeValue = text;
+    },
+    createText(text) {
+        return document.createTextNode(text)
     }
 })

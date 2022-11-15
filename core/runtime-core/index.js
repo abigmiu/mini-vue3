@@ -22,8 +22,32 @@ export function createRender(options) {
             setElement(container, vnode2.children)
         } else if (Array.isArray(vnode2.children)) {
             if (Array.isArray(vnode1.children)) {
-                vnode1.children.forEach(c => unmount(c))
-                vnode2.children.forEach(c => patch(null, c, container))
+                // diff
+                const oldChildren = vnode1.children;
+                const newChildren = vnode2.children;
+                const oldLen = vnode1.children.length;
+                const newLen = vnode2.children.length;
+
+                const commonLen = Math.min(oldLen, newLen);
+
+                for (let i = 0; i < commonLen; i++) {
+                    patch(oldChildren[i], newChildren[i], container);
+                    console.log('patch')
+                }
+                if (oldLen < newLen) {
+                    for (let i = commonLen; i < newLen; i++) {
+                        patch(null, newChildren[i], container);
+                        console.log('new patch');
+                    }
+                }
+
+                if (newLen < oldLen) {
+                    for (let i = commonLen; i < oldLen; i++) {
+                        unmount(oldChildren[i]);
+                        console.log('old unmount');
+                    }
+                }
+
             } else {
                 setElement(container, '')
                 vnode2.children.forEach(c => patch(null, c, container))

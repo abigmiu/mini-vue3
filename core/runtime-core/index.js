@@ -26,15 +26,21 @@ export function createRender(options) {
                 const oldChildren = vnode1.children;
                 const newChildren = vnode2.children;
 
+                const keysToRemove = new Map()
+                oldChildren.forEach(c => keysToRemove.set(c.key, c))
+
                 let lastIndex = 0;
                 for (let i = 0; i < newChildren.length; i++) {
+                    let find = false
                     const newVNode = newChildren[i];
                     // 从旧节点中查找是否具有相同 key 的节点
                     for (let j = 0; j < oldChildren.length; j++) {
                         const oldVNode = oldChildren[j];
 
                         if (oldVNode.key === newVNode.key) {
+                            find = true
                             patch(oldVNode, newVNode, container);
+                            keysToRemove.delete(oldVNode.key)
 
                             if (j < lastIndex) {
                                 const preVNode = newChildren[i - 1]
@@ -45,10 +51,27 @@ export function createRender(options) {
                             } else {
                                 lastIndex = j
                             }
+                            break;
                         }
+                    }
+
+                    // 子节点新增
+                    if (!find) {
+                        const preVNode = newChildren[i - 1];
+                        let anchor = null
+                        if (preVNode) {
+                            anchor = preVNode.el.nextSibling;
+                        } else {
+                            anchor = container.firstChild
+                        }
+                        patch(null, newVNode, container, anchor)
                     }
                 }
 
+                // 删除遗留属性
+                keysToRemove.forEach((vnode, key) => {
+                    unmount(vnode);
+                })
             } else {
                 setElement(container, '')
                 vnode2.children.forEach(c => patch(null, c, container))

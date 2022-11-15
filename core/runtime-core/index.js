@@ -25,26 +25,27 @@ export function createRender(options) {
                 // diff
                 const oldChildren = vnode1.children;
                 const newChildren = vnode2.children;
-                const oldLen = vnode1.children.length;
-                const newLen = vnode2.children.length;
 
-                const commonLen = Math.min(oldLen, newLen);
+                let lastIndex = 0;
+                for (let i = 0; i < newChildren.length; i++) {
+                    const newVNode = newChildren[i];
+                    // 从旧节点中查找是否具有相同 key 的节点
+                    for (let j = 0; j < oldChildren.length; j++) {
+                        const oldVNode = oldChildren[j];
 
-                for (let i = 0; i < commonLen; i++) {
-                    patch(oldChildren[i], newChildren[i], container);
-                    console.log('patch')
-                }
-                if (oldLen < newLen) {
-                    for (let i = commonLen; i < newLen; i++) {
-                        patch(null, newChildren[i], container);
-                        console.log('new patch');
-                    }
-                }
+                        if (oldVNode.key === newVNode.key) {
+                            patch(oldVNode, newVNode, container);
 
-                if (newLen < oldLen) {
-                    for (let i = commonLen; i < oldLen; i++) {
-                        unmount(oldChildren[i]);
-                        console.log('old unmount');
+                            if (j < lastIndex) {
+                                const preVNode = newChildren[i - 1]
+                                if (preVNode) {
+                                    const anchor = preVNode.el.nextSibling
+                                    insert(oldVNode.el, container, anchor)
+                                }
+                            } else {
+                                lastIndex = j
+                            }
+                        }
                     }
                 }
 

@@ -62,8 +62,8 @@ export const domRenderer = createRender({
     setElement(el, children) {
         el.textContent = children
     },
-    insert(el, container) {
-        container.appendChild(el)
+    insert(el, parent, anchor = null) {
+        parent.insertBefore(el, anchor);
     },
     patchProps(el, key, preValue, nextValue) {
         // 对 class 进行特殊处理，使用 el.className 设置是性能最高的方式

@@ -14,6 +14,96 @@ export function createRender(options) {
         setComment,
     } = options;
 
+    // 简单 diff
+    function simpleDiff(n1, n2, container) {
+        const oldChildren = n1.children;
+        const newChildren = n2.children;
+
+        const keysToRemove = new Map();
+        oldChildren.forEach(c => keysToRemove.set(c.key, c))
+
+        let lastIndex = 0;
+        for (let i = 0; i < newChildren.length; i++) {
+            let find = false;
+            const newVNode = newChildren[i];
+            for (let j = 0; j < oldChildren.length; j++) {
+                const oldVNode = oldChildren[j];
+
+                if (oldVNode.key === newVNode.key) {
+                    find = true;
+                    keysToRemove.delete(oldVNode, key);
+                    patch(oldVNode, newVNode, container);
+
+                    if (j < lastIndex) {
+                        const preVNode = newChildren[i - 1];
+                        if (preVNode) {
+                            const anchor = preVNode.el.nextSibling;
+                            insert(oldVNode.el, container, anchor);
+                        }
+                    }
+                } else {
+                    lastIndex = j;
+                }
+
+                break
+            }
+
+            if (!find) {
+                const preVNode = newChildren[i - 1];
+                let anchor = null
+                if (preVNode) {
+                    anchor = preVNode.el.nextSibling;
+                } else {
+                    anchor = container.firstChild
+                }
+                patch(null, newVNode, container, anchor)
+            }
+        }
+
+        keysToRemove.forEach((vnode, key) => {
+            unmount(vnode)
+        })
+    }
+
+    // 双端 diff
+    function doubleEndDiff(vnode1, vnode2, container) {
+        const oldChildren = vnode1.children;
+        const newChildren = vnode2.children;
+
+        let oldStartIdx = 0
+        let oldEndIdx = vnode1.children.length.length - 1
+        let newStartIdx = 0
+        let newEndIdx = vnode2.children.length - 1
+
+        let oldStartVNode = oldChildren[oldStartIdx]
+        let newStartVNode = newChildren[newStartIdx]
+        let oldEndVNode = oldChildren[oldEndIdx]
+        let newEndVNode = newChildren[newEndIdx]
+
+        while (newStartIdx <= newEndIdx && oldStartIdx <= oldEndIdx) {
+            if (newStartVNode.key === oldStartVNode.key) {
+                patch(oldStartVNode, newStartVNode, container)
+                oldStartVNode = oldChildren[++oldEndIdx]
+                newStartVNode = newChildren[++newStartIdx]
+            } else if (newEndVNode.key === oldEndIdx.key) {
+                patch(oldEndVNode, newEndVNode, container)
+                oldEndVNode = oldChildren[--oldEndIdx]
+                newEndVNode = newChildren[--newEndIdx]
+            } else if (newEndVNode.key === oldStartVNode.key) {
+                patch(oldStartVNode, newEndVNode, container)
+                insert(oldStartVNode.el, container, oldEndVNode.el.nextSibling);
+                newEndVNode = newChildren[--newEndIdx]
+                oldStartVNode = oldChildren[++oldStartIdx]
+            } else if (newStartVNode.key === oldEndVNode.key) {
+                patch(oldEndVNode, newStartVNode, container)
+                insert(oldEndVNode.el, container, oldStartVNode.el)
+                oldEndVNode = oldChildren[--oldEndIdx]
+                newStartVNode = newChildren[++newStartIdx]
+            }
+        }
+
+    }
+
     function patchChildren(vnode1, vnode2, container) {
         if (typeof vnode2.children === 'string') {
             if (Array.isArray(vnode1.children)) {
@@ -23,55 +113,7 @@ export function createRender(options) {
         } else if (Array.isArray(vnode2.children)) {
             if (Array.isArray(vnode1.children)) {
                 // diff
-                const oldChildren = vnode1.children;
-                const newChildren = vnode2.children;
-
-                const keysToRemove = new Map()
-                oldChildren.forEach(c => keysToRemove.set(c.key, c))
-
-                let lastIndex = 0;
-                for (let i = 0; i < newChildren.length; i++) {
-                    let find = false
-                    const newVNode = newChildren[i];
-                    // 从旧节点中查找是否具有相同 key 的节点
-                    for (let j = 0; j < oldChildren.length; j++) {
-                        const oldVNode = oldChildren[j];
-
-                        if (oldVNode.key === newVNode.key) {
-                            find = true
-                            patch(oldVNode, newVNode, container);
-                            keysToRemove.delete(oldVNode.key)
-
-                            if (j < lastIndex) {
-                                const preVNode = newChildren[i - 1]
-                                if (preVNode) {
-                                    const anchor = preVNode.el.nextSibling
-                                    insert(oldVNode.el, container, anchor)
-                                }
-                            } else {
-                                lastIndex = j
-                            }
-                            break;
-                        }
-                    }
-
-                    // 子节点新增
-                    if (!find) {
-                        const preVNode = newChildren[i - 1];
-                        let anchor = null
-                        if (preVNode) {
-                            anchor = preVNode.el.nextSibling;
-                        } else {
-                            anchor = container.firstChild
-                        }
-                        patch(null, newVNode, container, anchor)
-                    }
-                }
-
-                // 删除遗留属性
-                keysToRemove.forEach((vnode, key) => {
-                    unmount(vnode);
-                })
+              doubleEndDiff(vnode1, vnode2, container)
             } else {
                 setElement(container, '')
                 vnode2.children.forEach(c => patch(null, c, container))

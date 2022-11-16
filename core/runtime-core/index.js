@@ -113,7 +113,16 @@ export function createRender(options) {
 
                     oldChildren[idxInOld] = null
                     newStartVNode = newChildren[++newStartIdx]
+                } else {
+                    patch(null, newStartVNode, container)
                 }
+                newStartVNode = newChildren[++newStartIdx]
+            }
+        }
+
+        if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+            for (let i = newStartIdx; i <= newEndIdx; i++) {
+                patch(null, newChildren[i], container, oldStartVNode[i])
             }
         }
 

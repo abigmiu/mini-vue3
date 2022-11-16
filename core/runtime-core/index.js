@@ -81,7 +81,11 @@ export function createRender(options) {
         let newEndVNode = newChildren[newEndIdx]
 
         while (newStartIdx <= newEndIdx && oldStartIdx <= oldEndIdx) {
-            if (newStartVNode.key === oldStartVNode.key) {
+            if (!oldStartVNode) {
+                oldStartVNode = oldChildren[++oldStartIdx]
+            } else if (!oldEndVNode) {
+                oldEndVNode = oldChildren[--oldEndIdx]
+            } else if (newStartVNode.key === oldStartVNode.key) {
                 patch(oldStartVNode, newStartVNode, container)
                 oldStartVNode = oldChildren[++oldEndIdx]
                 newStartVNode = newChildren[++newStartIdx]
@@ -99,6 +103,17 @@ export function createRender(options) {
                 insert(oldEndVNode.el, container, oldStartVNode.el)
                 oldEndVNode = oldChildren[--oldEndIdx]
                 newStartVNode = newChildren[++newStartIdx]
+            } else {
+                const idxInOld = oldChildren.findIndex(v => v.key === newStartVNode.key)
+
+                if (idxInOld > 0) {
+                    const nodeToMove = oldChildren[idxInOld];
+                    patch(nodeToMove, newStartVNode, container)
+                    insert(nodeToMove.el, container, oldStartVNode.el)
+
+                    oldChildren[idxInOld] = null
+                    newStartVNode = newChildren[++newStartIdx]
+                }
             }
         }
 
